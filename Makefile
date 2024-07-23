@@ -1,6 +1,6 @@
 SWIFTC=xcrun --toolchain org.swift.59202407221a swiftc
 SWIFT_FLAGS_BASE=-O -Xlinker -dead_strip -parse-as-library
-SWIFT_FLAGS_EMBEDDED=-enable-experimental-feature Embedded -wmo -Xfrontend -function-sections -Xfrontend -disable-stack-protector
+SWIFT_FLAGS_EMBEDDED=-enable-experimental-feature Embedded -wmo -Xfrontend -function-sections -Xfrontend -disable-stack-protector -Xcc -ffreestanding
 SWIFT_FLAGS_RISCV=-target riscv32-none-none-eabi -Xcc -march=rv32gc -Xcc -mabi=ilp32
 LD=/opt/homebrew/bin/riscv64-unknown-elf-ld
 LD_FLAGS=-r -melf32lriscv --whole-archive
