@@ -5,7 +5,7 @@ SWIFT_FLAGS_RISCV=-target riscv32-none-none-eabi -Xcc -march=rv32gc -Xcc -mabi=i
 LD=/opt/homebrew/bin/riscv64-unknown-elf-ld
 LD_FLAGS=-r -melf32lriscv --whole-archive
 LIBSWIFT=/Library/Developer/Toolchains/swift-DEVELOPMENT-SNAPSHOT-2024-07-22-a.xctoolchain/usr/lib/swift/embedded/riscv32-none-none-eabi/libswiftUnicodeDataTables.a
-SOURCE=a.swift
+SOURCES=a.swift b.swift
 ASSEMBLY=_swiftcode.S
 OBJECT=_swiftcode.o
 OUTPUT=strable.o
@@ -14,11 +14,11 @@ OUTPUT=strable.o
 all: $(OUTPUT) $(ASSEMBLY) $(OBJECT)
 
 # アセンブリファイル、ただの目視確認用、利用しない
-$(ASSEMBLY): $(SOURCE)
-	$(SWIFTC) $(SWIFT_FLAGS_BASE) $(SWIFT_FLAGS_EMBEDDED) $(SWIFT_FLAGS_RISCV) -S $< > $@
+$(ASSEMBLY): $(SOURCES)
+	$(SWIFTC) $(SWIFT_FLAGS_BASE) $(SWIFT_FLAGS_EMBEDDED) $(SWIFT_FLAGS_RISCV) -S $(SOURCES) > $@
 
-$(OBJECT): $(SOURCE)
-	$(SWIFTC) $(SWIFT_FLAGS_BASE) $(SWIFT_FLAGS_EMBEDDED) $(SWIFT_FLAGS_RISCV) -c -o $@ $<
+$(OBJECT): $(SOURCES)
+	$(SWIFTC) $(SWIFT_FLAGS_BASE) $(SWIFT_FLAGS_EMBEDDED) $(SWIFT_FLAGS_RISCV) -c -o $@ $(SOURCES)
 
 $(OUTPUT): $(OBJECT)
 	$(LD) $(LD_FLAGS) $(LIBSWIFT) $< -o $@
@@ -29,4 +29,7 @@ clean:
 check-undef-symbol: $(OUTPUT)
 	nm -u $(OUTPUT)
 
-.PHONY: all clean check-undef-symbol
+check-extern-symbol: $(OUTPUT)
+	nm -g $(OUTPUT)
+
+.PHONY: all clean check-undef-symbol check-extern-symbol
