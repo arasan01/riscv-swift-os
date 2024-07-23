@@ -1,6 +1,7 @@
-# 変数の定義
 SWIFTC=xcrun --toolchain org.swift.59202407221a swiftc
-SWIFT_FLAGS=-target riscv32-none-none-eabi -enable-experimental-feature Embedded -Xcc -march=rv32gc -Xcc -mabi=ilp32 -wmo -Xfrontend -function-sections -Xfrontend -disable-stack-protector -O -Xlinker -dead_strip -parse-as-library
+SWIFT_FLAGS_BASE=-O -Xlinker -dead_strip -parse-as-library
+SWIFT_FLAGS_EMBEDDED=-enable-experimental-feature Embedded -wmo -Xfrontend -function-sections -Xfrontend -disable-stack-protector
+SWIFT_FLAGS_RISCV=-target riscv32-none-none-eabi -Xcc -march=rv32gc -Xcc -mabi=ilp32
 LD=/opt/homebrew/bin/riscv64-unknown-elf-ld
 LD_FLAGS=-r -melf32lriscv --whole-archive
 LIBSWIFT=/Library/Developer/Toolchains/swift-DEVELOPMENT-SNAPSHOT-2024-07-22-a.xctoolchain/usr/lib/swift/embedded/riscv32-none-none-eabi/libswiftUnicodeDataTables.a
@@ -10,22 +11,22 @@ OBJECT=_swiftcode.o
 OUTPUT=strable.o
 
 # デフォルトターゲット
-all: $(OUTPUT)
+all: $(OUTPUT) $(ASSEMBLY) $(OBJECT)
 
-# アセンブリファイルの生成
+# アセンブリファイル、ただの目視確認用、利用しない
 $(ASSEMBLY): $(SOURCE)
-	$(SWIFTC) $(SWIFT_FLAGS) -c -S $< > $@
+	$(SWIFTC) $(SWIFT_FLAGS_BASE) $(SWIFT_FLAGS_EMBEDDED) $(SWIFT_FLAGS_RISCV) -S $< > $@
 
-# オブジェクトファイルの生成
 $(OBJECT): $(SOURCE)
-	$(SWIFTC) $(SWIFT_FLAGS) -c -o $@ $<
+	$(SWIFTC) $(SWIFT_FLAGS_BASE) $(SWIFT_FLAGS_EMBEDDED) $(SWIFT_FLAGS_RISCV) -c -o $@ $<
 
-# 最終的なオブジェクトファイルのリンク
 $(OUTPUT): $(OBJECT)
 	$(LD) $(LD_FLAGS) $(LIBSWIFT) $< -o $@
 
-# クリーンアップ
 clean:
 	rm -f $(ASSEMBLY) $(OBJECT) $(OUTPUT)
 
-.PHONY: all clean
+check-undef-symbol: $(OUTPUT)
+	nm -u $(OUTPUT)
+
+.PHONY: all clean check-undef-symbol
