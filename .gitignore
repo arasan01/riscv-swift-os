@@ -1,5 +1,4 @@
 a
 a.o
-a.S
-nor.S
-sec.S
+_swiftcode.o
+_swiftcode.S
