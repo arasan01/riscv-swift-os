@@ -6,7 +6,7 @@ XCTOOLCHAIN_ID:=$(shell plutil -extract CFBundleIdentifier raw $(XCTOOLCHAIN)/In
 SWIFTC=xcrun --toolchain $(XCTOOLCHAIN_ID) swiftc
 SWIFT_FLAGS_BASE=-O -g -Xlinker -dead_strip -parse-as-library -I ll
 SWIFT_FLAGS_EMBEDDED=-enable-experimental-feature Embedded -wmo -Xfrontend -function-sections -Xfrontend -disable-stack-protector
-SWIFT_FLAGS_RISCV=-target riscv32-none-none-eabi -Xcc -march=rv32gc -Xcc -mabi=ilp32
+SWIFT_FLAGS_RISCV=-target riscv32-none-none-eabi -Xcc -march=rv32imafc -Xcc -mabi=ilp32
 
 # Compiler - Clang
 CC=xcrun --toolchain $(XCTOOLCHAIN_ID) clang
@@ -16,7 +16,7 @@ CFLAGS_CHECK=-Wall -Wextra
 LINKER_SCRIPT=kernel.ld
 LINKER_MAP=kernel.map
 LD=xcrun --toolchain $(XCTOOLCHAIN_ID) ld.lld
-LD_FLAGS=-T $(LINKER_SCRIPT) --Map $(BUILD_DIR)/$(LINKER_MAP)
+LD_FLAGS=-T $(LINKER_SCRIPT) --Map $(BUILD_DIR)/$(LINKER_MAP) --lto-O3
 LIBSWIFT_UNICODE_TABLE=$(XCTOOLCHAIN)/usr/lib/swift/embedded/riscv32-none-none-eabi/libswiftUnicodeDataTables.a
 
 # Virtual Machine
@@ -24,10 +24,10 @@ QEMU=qemu-system-riscv32
 
 # Related Files
 SWIFT_SOURCES=kernel.swift
-CC_BOOT_SOURCES=boot.c
+CC_ASM_SOURCES=asm.c
 BUILD_DIR=.build
 SWIFT_OBJECT=$(BUILD_DIR)/_swiftcode.o
-CC_BOOT_OBJECT=$(BUILD_DIR)/_boot.o
+CC_ASM_OBJECT=$(BUILD_DIR)/_glue.o
 OUTPUT=$(BUILD_DIR)/kernel.elf
 
 # デフォルトターゲット
@@ -36,17 +36,17 @@ all: $(OUTPUT) $(OBJECT)
 $(SWIFT_OBJECT): $(SWIFT_SOURCES)
 	$(SWIFTC) $(SWIFT_FLAGS_BASE) $(SWIFT_FLAGS_EMBEDDED) $(SWIFT_FLAGS_RISCV) -c $^ -o $@
 
-$(CC_BOOT_OBJECT): $(CC_BOOT_SOURCES)
-	$(CC) $(CFLAGS) $^ -o $@
+$(CC_ASM_OBJECT): $(CC_ASM_SOURCES)
+	$(CC) $(CFLAGS) $(CFLAGS_CHECK) $^ -o $@
 
-$(OUTPUT): $(SWIFT_OBJECT) $(CC_BOOT_OBJECT)
+$(OUTPUT): $(SWIFT_OBJECT) $(CC_ASM_OBJECT)
 	$(LD) $(LD_FLAGS) $(LIBSWIFT_UNICODE_TABLE) $^ -o $@
 
 clean:
 	rm -rf $(BUILD_DIR)
 
 run:
-	$(QEMU) -machine virt -bios default -nographic -serial mon:stdio --no-reboot -kernel $(OUTPUT)
+	$(QEMU) -machine virt -bios default -nographic -serial mon:stdio --no-reboot -kernel $(OUTPUT) -D $(BUILD_DIR)/logfile.log -d in_asm,cpu
 
 check-undef-symbol: $(OUTPUT)
 	nm -u $(OUTPUT)
