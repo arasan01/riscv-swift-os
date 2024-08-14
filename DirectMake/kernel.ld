@@ -1,6 +1,10 @@
 ENTRY(boot)
 
 SECTIONS {
+  /DISCARD/ : ALIGN(4) {
+      *(.swift_modhash);
+  }
+
   . = 0x80200000;
 
   .text :{
@@ -22,11 +26,12 @@ SECTIONS {
     __bss_end = .;
   }
 
-    . = ALIGN(4);
-    . += 128 * 1024; /* 128KB */
-    __stack_top = .;
+  . = ALIGN(4);
+  . += 128 * 1024; /* 128KB */
+  __stack_top = .;
 
-    /DISCARD/ : {
-       *(.swift_modhash)
-    }
+    . = ALIGN(4096);
+  __free_ram = .;
+  . += 64 * 1024 * 1024; /* 64MB */
+  __free_ram_end = .;
 }

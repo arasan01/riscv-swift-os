@@ -1,9 +1,35 @@
 #include "ll/ll.h"
 
-#define MEMORY_SIZE 1024*1024 // 1MBのメモリプール
-
-static uint8_t memory_pool[MEMORY_SIZE];
-static size_t current_offset = 0;
+char *get_bss_start() {
+    return __bss;
+}
+char *get_bss_end() {
+    return __bss_end;
+}
+char *get_stack_top() {
+    return __stack_top;
+}
+char *get_free_ram() {
+    return __free_ram;
+}
+char *get_free_ram_end() {
+    return __free_ram_end;
+}
+size_t get_bss_ptr_value() {
+    return (size_t)__bss;
+}
+size_t get_bss_end_ptr_value() {
+    return (size_t)__bss_end;
+}
+size_t get_stack_top_ptr_value() {
+    return (size_t)__stack_top;
+}
+size_t get_free_ram_ptr_value() {
+    return (size_t)__free_ram;
+}
+size_t get_free_ram_end_ptr_value() {
+    return (size_t)__free_ram_end;
+}
 
 struct sbiret sbi_call(long arg0, long arg1, long arg2, long arg3, long arg4,
                        long arg5, long fid, long eid) {
@@ -24,29 +50,63 @@ struct sbiret sbi_call(long arg0, long arg1, long arg2, long arg3, long arg4,
     return (struct sbiret){.error = a0, .value = a1};
 }
 
-void *memset(void *buf, int32_t c, uint32_t n) {
-    for (uint32_t i = 0; i < n; i++) {
-        ((uint8_t *)buf)[i] = c & 0xff;
-        ((uint8_t *)buf)[i+1] = c & 0xff00;
-        ((uint8_t *)buf)[i+2] = c & 0xff0000;
-        ((uint8_t *)buf)[i+3] = c & 0xff000000;
-    }
+void *memset(void *buf, int32_t c, size_t n) {
+    uint8_t *p = (uint8_t *) buf;
+    uint8_t m = (uint8_t)c;
+    while (n--)
+        *p++ = m;
     return buf;
 }
 
-void putchar2(char ch) {
-    sbi_call(ch, 0, 0, 0, 0, 0, 0, 1 /* Console Putchar */);
+void *memcpy(void *dest, const void *src, size_t count) {
+    char *d = dest;
+    const char *s = src;
+    while (count--) {
+        *d++ = *s++;
+    }
+    return dest;
 }
 
-void kernel_main3(void) {
-    const char *s = "\n\nHello World!\n";
-    for (int i = 0; s[i] != '\0'; i++) {
-        putchar2(s[i]);
+static void *heap_start = 0;
+static void *heap_end = 0;
+
+// 簡易的なメモリアロケータ
+void *simple_alloc(size_t size) {
+    if (heap_start == 0) {
+        // 初期化: ヒープ領域の開始アドレスを設定
+        // 注: 実際のアドレスは環境に応じて適切に設定する必要があります
+        heap_start = (void *)get_free_ram();
+        heap_end = heap_start;
     }
 
-    for (;;) {
-        __asm__ __volatile__("wfi");
-    }
+    void *result = heap_end;
+    heap_end = (char *)heap_end + size;
+    return result;
+}
+
+int posix_memalign(void **memptr, size_t alignment, size_t size) {
+    // アライメントは2のべき乗であることを確認
+    if ((alignment & (alignment - 1)) != 0 || alignment < sizeof(void *))
+        return 22; // EINVAL
+
+    size_t padding = alignment - 1 + sizeof(void *);
+    void *p = simple_alloc(size + padding);
+    if (p == 0)
+        return 12; // ENOMEM
+
+    void *aligned = (void *)(((size_t)p + padding) & ~(alignment - 1));
+    *((void **)aligned - 1) = p;
+    *memptr = aligned;
+    return 0;
+}
+
+void free(void *ptr) {
+    // この簡易実装では実際にメモリを解放しません
+    // フリースタンディング環境では、通常、メモリ解放は不要または別の方法で管理します
+}
+
+void sputchar(char ch) {
+    sbi_call(ch, 0, 0, 0, 0, 0, 0, 1 /* Console Putchar */);
 }
 
 void wfi() {
@@ -58,34 +118,9 @@ __attribute__((naked))
 void boot(void) {
     __asm__ __volatile__(
         "mv sp, %[stack_top]\n"
-        "j kernel_main\n"
+        "j kernel_main_swift\n"
         :
         : [stack_top] "r" (__stack_top)
     );
 }
 
-int posix_memalign(void **memptr, size_t alignment, size_t size) {
-    if (alignment % sizeof(void*) != 0 || (alignment & (alignment - 1)) != 0) {
-        return 2;
-    }
-
-    size_t padding = 0;
-    size_t current_address = (size_t)&memory_pool[current_offset];
-    if (current_address % alignment != 0) {
-        padding = alignment - (current_address % alignment);
-    }
-
-    if (current_offset + padding + size > MEMORY_SIZE) {
-        return 3;
-    }
-
-    current_offset += padding;
-    *memptr = &memory_pool[current_offset];
-    current_offset += size;
-
-    return 0;
-}
-
-void free(void *ptr) {
-  // ???
-}
