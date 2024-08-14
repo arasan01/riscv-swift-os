@@ -97,12 +97,21 @@ int posix_memalign(void **memptr, size_t alignment, size_t size) {
     void *aligned = (void *)(((size_t)p + padding) & ~(alignment - 1));
     *((void **)aligned - 1) = p;
     *memptr = aligned;
+    // print call posix
+    char *msg = "\nposix_memalign called";
+    while (*msg != '\0') {
+        sputchar(*msg++);
+    }
     return 0;
 }
 
 void free(void *ptr) {
     // この簡易実装では実際にメモリを解放しません
     // フリースタンディング環境では、通常、メモリ解放は不要または別の方法で管理します
+    char *msg = "\nfree called";
+    while (*msg != '\0') {
+        sputchar(*msg++);
+    }
 }
 
 void sputchar(char ch) {
