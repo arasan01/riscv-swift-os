@@ -4,13 +4,13 @@ XCTOOLCHAIN_ID:=$(shell plutil -extract CFBundleIdentifier raw $(XCTOOLCHAIN)/In
 
 # Compiler - Swift
 SWIFTC=xcrun --toolchain $(XCTOOLCHAIN_ID) swiftc
-SWIFT_FLAGS_BASE=-Osize -parse-as-library -I ll
+SWIFT_FLAGS_BASE=-parse-as-library -I ll
 SWIFT_FLAGS_EMBEDDED=-enable-experimental-feature Embedded -enable-experimental-feature Extern -wmo -Xfrontend -function-sections -Xfrontend -disable-stack-protector
 SWIFT_FLAGS_RISCV=-target riscv32-none-none-eabi -Xcc -march=rv32gc -Xcc -mabi=ilp32
 
 # Compiler - Clang
 CC=xcrun --toolchain $(XCTOOLCHAIN_ID) clang
-CFLAGS=-std=c11 -O3 --target=riscv32-none-none-eabi -nostdlib -ffreestanding -c -march=rv32gc -mabi=ilp32
+CFLAGS=-std=c11 --target=riscv32-none-none-eabi -nostdlib -ffreestanding -c -march=rv32gc -mabi=ilp32
 CFLAGS_CHECK=-Wall -Wextra
 
 # Linker
@@ -24,23 +24,31 @@ LIBSWIFT_UNICODE_TABLE=$(XCTOOLCHAIN)/usr/lib/swift/embedded/riscv32-none-none-e
 QEMU=qemu-system-riscv32
 
 # Related Files
-SWIFT_SOURCES=kernel.swift
-CC_ASM_SOURCES=asm.c
+SWIFT_SOURCES=$(wildcard *.swift)
+CC_SOURCES=$(wildcard *.c)
 BUILD_DIR=.build
-SWIFT_OBJECT=$(BUILD_DIR)/_swiftcode.o
-CC_ASM_OBJECT=$(BUILD_DIR)/_glue.o
+CC_OBJS=$(patsubst %.c,$(BUILD_DIR)/%.o,$(CC_SOURCES))
+SWIFT_OBJECT=_swiftcode.o
 OUTPUT=$(BUILD_DIR)/kernel.elf
 
 # デフォルトターゲット
 all: $(OUTPUT) $(OBJECT)
 
-$(SWIFT_OBJECT): $(SWIFT_SOURCES)
+debug: SWIFT_FLAGS_BASE += -Onone
+debug: CFLAGS += -O0
+debug: $(OUTPUT) $(OBJECT)
+
+release: SWIFT_FLAGS_BASE += -Osize
+release: CFLAGS += -Oz
+release: $(OUTPUT) $(OBJECT)
+
+$(BUILD_DIR)/$(SWIFT_OBJECT): $(SWIFT_SOURCES)
 	$(SWIFTC) $(SWIFT_FLAGS_BASE) $(SWIFT_FLAGS_EMBEDDED) $(SWIFT_FLAGS_RISCV) -c $^ -o $@
 
-$(CC_ASM_OBJECT): $(CC_ASM_SOURCES)
+$(BUILD_DIR)/%.o: %.c
 	$(CC) $(CFLAGS) $(CFLAGS_CHECK) $^ -o $@
 
-$(OUTPUT): $(SWIFT_OBJECT) $(CC_ASM_OBJECT)
+$(OUTPUT): $(BUILD_DIR)/$(SWIFT_OBJECT) $(CC_OBJS)
 	$(LD) $(LD_FLAGS) $(LIBSWIFT_UNICODE_TABLE) $^ -o $@
 
 clean:
@@ -58,4 +66,4 @@ check-undef-symbol: $(OUTPUT)
 check-extern-symbol: $(OUTPUT)
 	nm -g $(OUTPUT)
 
-.PHONY: all clean check-undef-symbol check-extern-symbol run dev
+.PHONY: all clean check-undef-symbol check-extern-symbol run dev debug release

@@ -1,9 +1,7 @@
 #pragma once
 
-typedef unsigned char uint8_t;
-typedef int int32_t;
-typedef unsigned int uint32_t;
-typedef uint32_t size_t;
+#include <stddef.h>
+#include <stdint.h>
 
 extern char __bss[];
 extern char __bss_end[];
@@ -22,11 +20,12 @@ size_t get_stack_top_ptr_value();
 size_t get_free_ram_ptr_value();
 size_t get_free_ram_end_ptr_value();
 
-void *memset(void *buf, int32_t c, size_t n);
+int putchar(int c);
+void *memset(void *buf, int c, size_t n);
 void *memcpy(void *dest, const void *src, size_t count);
-
+void *memmove(void *dest, const void *src, size_t count);
+size_t strlen(const char *str);
 void wfi();
-void sputchar(char c);
 
 struct sbiret {
     long error;
