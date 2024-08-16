@@ -99,3 +99,53 @@ void free(void *ptr) {
     // フリースタンディング環境では、通常、メモリ解放は不要または別の方法で管理します
     ptr = NULL;
 }
+
+// 64ビット整数の算術左シフト演算を行う
+int64_t __ashldi3(int64_t a, int32_t b) {
+    uint32_t low = (uint32_t)a;
+    int high = (int)(a >> 32);
+
+    if (b >= 32) {
+        high = low << (b - 32);
+        low = 0;
+    } else if (b != 0) {
+        high = (high << b) | (low >> (32 - b));
+        low = low << b;
+    }
+
+    return ((int64_t)high << 32) | low;
+}
+
+int64_t __lshrdi3(int64_t a, int b) {
+    uint64_t ua = (uint64_t)a;  // 符号なし64ビット整数に変換
+    if (b >= 64) {
+        return 0;  // 64以上シフトすると0になる
+    }
+    return (int64_t)(ua >> b);  // 論理右シフトを行い、結果を返す
+}
+
+uint64_t __udivdi3(uint64_t num, uint64_t denom) {
+    if (denom == 0) {
+        // 0除算の処理（実際の環境に応じて適切に処理する）
+        return 0;
+    }
+
+    uint64_t result = 0;
+    while (num >= denom) {
+        num -= denom;
+        result++;
+    }
+    return result;
+}
+
+uint64_t __umoddi3(uint64_t num, uint64_t denom) {
+    if (denom == 0) {
+        // 0除算の処理（実際の環境に応じて適切に処理する）
+        return 0;
+    }
+
+    while (num >= denom) {
+        num -= denom;
+    }
+    return num;
+}

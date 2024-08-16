@@ -4,7 +4,6 @@ let lf: Int = 0x0a
 
 func zeroClear() {
   swiftMemset(get_bss_start(), 0x00, get_bss_end_ptr_value() - get_bss_ptr_value())
-  swiftMemset(get_free_ram(), 0x00, get_free_ram_end_ptr_value() - get_free_ram_ptr_value())
 }
 
 func printAtoZ() {

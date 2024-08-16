@@ -148,3 +148,36 @@ uint32_t get_sepc() {
 void set_sepc(uint32_t value) {
     __asm__ __volatile__("csrw sepc, %0" ::"r"(value));
 }
+
+uint32_t __atomic_load_4(const volatile void *ptr, int memorder)
+{
+    uint32_t result;
+    __asm__ volatile (
+        "fence r, r\n\t"
+        "lw %0, 0(%1)\n\t"
+        "fence r, r"
+        : "=r" (result)
+        : "r" (ptr)
+        : "memory"
+    );
+    return result;
+}
+
+uint32_t __atomic_fetch_add_4(volatile void *ptr, uint32_t val, int memorder)
+{
+    uint32_t result;
+    uint32_t temp;
+    __asm__ volatile (
+        "fence rw, rw\n"
+        "1:\n\t"
+        "lr.w %0, 0(%2)\n\t"
+        "add %1, %0, %3\n\t"
+        "sc.w t0, %1, 0(%2)\n\t"
+        "bnez t0, 1b\n\t"
+        "fence rw, rw"
+        : "=&r" (result), "=&r" (temp)
+        : "r" (ptr), "r" (val)
+        : "t0", "memory"
+    );
+    return result;
+}

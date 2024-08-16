@@ -4,8 +4,8 @@ XCTOOLCHAIN_ID:=$(shell plutil -extract CFBundleIdentifier raw $(XCTOOLCHAIN)/In
 
 # Compiler - Swift
 SWIFTC=xcrun --toolchain $(XCTOOLCHAIN_ID) swiftc
-SWIFT_FLAGS_BASE=-parse-as-library -I LL -lto=llvm-full -experimental-hermetic-seal-at-link -swift-version 6
-SWIFT_FLAGS_EMBEDDED=-enable-experimental-feature Embedded -enable-experimental-feature Extern -wmo -Xfrontend -function-sections -Xfrontend -disable-stack-protector
+SWIFT_FLAGS_BASE=-parse-as-library -I LL -swift-version 6
+SWIFT_FLAGS_EMBEDDED=-enable-experimental-feature Embedded -wmo -Xfrontend -function-sections -Xfrontend -disable-stack-protector
 SWIFT_FLAGS_RISCV=-target riscv32-none-none-eabi -Xcc -march=rv32gc -Xcc -mabi=ilp32
 
 # Compiler - Clang
@@ -17,7 +17,7 @@ CFLAGS_CHECK=-Wall -Wextra
 LINKER_SCRIPT=kernel.ld
 LINKER_MAP=kernel.map
 LD=xcrun --toolchain $(XCTOOLCHAIN_ID) ld.lld
-LD_FLAGS=-T $(LINKER_SCRIPT) --Map $(BUILD_DIR)/$(LINKER_MAP) --lto-O3 --nostdlib
+LD_FLAGS=-T $(LINKER_SCRIPT) --Map $(BUILD_DIR)/$(LINKER_MAP) --nostdlib
 LIBSWIFT_UNICODE_TABLE=$(XCTOOLCHAIN)/usr/lib/swift/embedded/riscv32-none-none-eabi/libswiftUnicodeDataTables.a
 
 # Virtual Machine
@@ -34,12 +34,13 @@ OUTPUT=$(BUILD_DIR)/kernel.elf
 # デフォルトターゲット
 all: debug
 
-debug: SWIFT_FLAGS_BASE += -Onone
-debug: CFLAGS += -O0
+debug: SWIFT_FLAGS_BASE += -Onone -g
+debug: CFLAGS += -O0 -g
 debug: $(OUTPUT) $(OBJECT)
 
-release: SWIFT_FLAGS_BASE += -Osize
-release: CFLAGS += -Oz
+release: SWIFT_FLAGS_BASE += -Osize -lto=llvm-full -experimental-hermetic-seal-at-link
+release: CFLAGS += -O3
+release: LD_FLAGS += --lto-O3
 release: $(OUTPUT) $(OBJECT)
 
 $(BUILD_DIR)/$(SWIFT_OBJECT): $(SWIFT_SOURCES)

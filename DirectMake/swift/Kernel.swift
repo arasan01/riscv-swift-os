@@ -18,6 +18,7 @@ func PANIC(_ text: String, file: String = #file, line: Int = #line) {
 func kernel_main_swift() {
   zeroClear()
   register_kernel_entry()
+  printUnicode()
   unimp()
   PANIC("SYSTEM HALTED")
 }
