@@ -1,7 +1,7 @@
 import _Volatile
 
 extension VolatileMappedRegister {
-  init(rawPointer: UnsafeMutableRawPointer) {
+  init(rawPointer: UnsafeRawPointer) {
     self.init(unsafeBitPattern: UInt(bitPattern: rawPointer))
   }
 }

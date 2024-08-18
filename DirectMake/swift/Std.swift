@@ -23,7 +23,9 @@ func swiftMemcpy(
 ) {
   guard var dest, var src else { return }
   for _ in 0..<count {
-    dest.storeBytes(of: src.load(as: UInt8.self), as: UInt8.self)
+    let vdest = VolatileMappedRegister<UInt8>(rawPointer: dest)
+    let vsrc = VolatileMappedRegister<UInt8>(rawPointer: src)
+    vdest.store(vsrc.load())
     dest = dest.advanced(by: 1)
     src = src.advanced(by: 1)
   }
@@ -43,7 +45,9 @@ func swiftMemmove(
     for _ in 0..<count {
       dest = dest.advanced(by: -1)
       src = src.advanced(by: -1)
-      dest.storeBytes(of: src.load(as: UInt8.self), as: UInt8.self)
+      let vdest = VolatileMappedRegister<UInt8>(rawPointer: dest)
+      let vsrc = VolatileMappedRegister<UInt8>(rawPointer: src)
+      vdest.store(vsrc.load())
     }
   } else {
     swiftMemcpy(dest, src, ccount)
@@ -58,8 +62,10 @@ func swiftMemcmp(
 ) -> CInt {
   guard var buffer1, var buffer2 else { return 0 }
   for _ in 0..<count {
-    let b1 = buffer1.load(as: UInt8.self)
-    let b2 = buffer2.load(as: UInt8.self)
+    let vb1 = VolatileMappedRegister<UInt8>(rawPointer: buffer1)
+    let vb2 = VolatileMappedRegister<UInt8>(rawPointer: buffer2)
+    let b1 = vb1.load()
+    let b2 = vb2.load()
     if b1 != b2 {
       return CInt(b1) - CInt(b2)
     }
