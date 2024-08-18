@@ -1,4 +1,5 @@
 import LL
+import _Volatile
 
 @_cdecl("handle_trap")
 func handle_trap(_ f: UnsafeMutablePointer<trap_frame>) {
@@ -11,7 +12,7 @@ func handle_trap(_ f: UnsafeMutablePointer<trap_frame>) {
 
 func PANIC(_ text: String, file: String = #file, line: Int = #line) {
   print("[PANIC:\(file):\(line)] \(text)")
-  while true {}
+  while true { wfi() }
 }
 
 @_cdecl("kernel_main_swift")
@@ -19,6 +20,6 @@ func kernel_main_swift() {
   zeroClear()
   register_kernel_entry()
   printUnicode()
-  unimp()
+  checkRandom()
   PANIC("SYSTEM HALTED")
 }

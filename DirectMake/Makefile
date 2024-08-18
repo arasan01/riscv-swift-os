@@ -5,7 +5,7 @@ XCTOOLCHAIN_ID:=$(shell plutil -extract CFBundleIdentifier raw $(XCTOOLCHAIN)/In
 # Compiler - Swift
 SWIFTC=xcrun --toolchain $(XCTOOLCHAIN_ID) swiftc
 SWIFT_FLAGS_BASE=-parse-as-library -I LL -swift-version 6
-SWIFT_FLAGS_EMBEDDED=-enable-experimental-feature Embedded -wmo -Xfrontend -function-sections -Xfrontend -disable-stack-protector
+SWIFT_FLAGS_EMBEDDED=-enable-experimental-feature Embedded -enable-experimental-feature Extern -enable-experimental-feature FixedArrays -runtime-compatibility-version none -wmo -Xfrontend -function-sections -Xfrontend -disable-stack-protector -Xfrontend -disable-objc-interop
 SWIFT_FLAGS_RISCV=-target riscv32-none-none-eabi -Xcc -march=rv32gc -Xcc -mabi=ilp32
 
 # Compiler - Clang

@@ -1,44 +1,42 @@
 import LL
+import _Volatile
 
 @_cdecl("memset")
-@discardableResult
 func swiftMemset(
-  _ buf: UnsafeMutableRawPointer?,
+  _ ptr: UnsafeMutableRawPointer?,
   _ c: Int32,
-  _ n: Int
-) -> UnsafeMutableRawPointer! {
-  guard var buf else { return buf }
+  _ n: CInt
+) {
+  guard var ptr else { return }
   for _ in 0..<n {
-    buf.storeBytes(of: UInt8(c), as: UInt8.self)
-    buf = buf.advanced(by: 1)
+    let vaddr = VolatileMappedRegister<UInt8>(rawPointer: ptr)
+    vaddr.store(UInt8(c))
+    ptr = ptr.advanced(by: 1)
   }
-  return buf
 }
 
 @_cdecl("memcpy")
-@discardableResult
 func swiftMemcpy(
   _ dest: UnsafeMutableRawPointer?,
   _ src: UnsafeRawPointer?,
-  _ count: Int
-) -> UnsafeMutableRawPointer? {
-  guard var dest, var src else { return dest }
+  _ count: CInt
+) {
+  guard var dest, var src else { return }
   for _ in 0..<count {
     dest.storeBytes(of: src.load(as: UInt8.self), as: UInt8.self)
     dest = dest.advanced(by: 1)
     src = src.advanced(by: 1)
   }
-  return dest
 }
 
 @_cdecl("memmove")
-@discardableResult
 func swiftMemmove(
   _ dest: UnsafeMutableRawPointer?,
   _ src: UnsafeRawPointer?,
-  _ count: Int
-) -> UnsafeMutableRawPointer? {
-  guard var dest, var src else { return dest }
+  _ ccount: CInt
+) {
+  guard var dest, var src else { return }
+  let count = Int(ccount)
   if src < dest && src + count > dest {
     src = src.advanced(by: count)
     dest = dest.advanced(by: count)
@@ -48,23 +46,22 @@ func swiftMemmove(
       dest.storeBytes(of: src.load(as: UInt8.self), as: UInt8.self)
     }
   } else {
-    swiftMemcpy(dest, src, count)
+    swiftMemcpy(dest, src, ccount)
   }
-  return dest
 }
 
 @_cdecl("memcmp")
 func swiftMemcmp(
   _ buffer1: UnsafeRawPointer?,
   _ buffer2: UnsafeRawPointer?,
-  _ count: Int
-) -> Int32 {
+  _ count: CInt
+) -> CInt {
   guard var buffer1, var buffer2 else { return 0 }
   for _ in 0..<count {
     let b1 = buffer1.load(as: UInt8.self)
     let b2 = buffer2.load(as: UInt8.self)
     if b1 != b2 {
-      return Int32(b1) - Int32(b2)
+      return CInt(b1) - CInt(b2)
     }
     buffer1 = buffer1.advanced(by: 1)
     buffer2 = buffer2.advanced(by: 1)
@@ -72,23 +69,19 @@ func swiftMemcmp(
   return 0
 }
 
-@_cdecl("swift_impl_putchar")
-@discardableResult
-func swiftCABIPutchar(_ ch: Int32) -> Int32 {
-  sbi_call(Int(ch), 0, 0, 0, 0, 0, 0, 1 /* Console Putchar */)
-  return ch
-}
+@_extern(c, "putchar")
+private func putchar(_ ch: CInt) -> CInt
 
 func swiftPutchar(_ ch: Int) {
-  swiftCABIPutchar(Int32(ch))
+  _ = putchar(CInt(ch))
 }
 
 @_cdecl("strlen")
-func swiftStrlen(_ str: UnsafePointer<UInt8>?) -> Int {
+func swiftStrlen(_ str: UnsafePointer<UInt8>?) -> CInt {
   guard let str else { return 0 }
   var s = str
   while s.pointee != 0 {
     s = s.advanced(by: 1)
   }
-  return Int(s - str)
+  return CInt(s - str)
 }

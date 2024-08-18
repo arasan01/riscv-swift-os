@@ -1,6 +1,7 @@
 #include "include/kernel.h"
 #include "include/will_remove.h"
 
+int putchar(int c);
 void myprintf(const char *fmt, ...) {
     va_list vargs;
     va_start(vargs, fmt);

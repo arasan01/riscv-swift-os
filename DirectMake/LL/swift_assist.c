@@ -31,10 +31,3 @@ size_t get_free_ram_ptr_value() {
 size_t get_free_ram_end_ptr_value() {
     return (size_t)__free_ram_end;
 }
-
-// Workaround for the following error:
-// 直接Swiftでputcharをcdeclによって作ってもコンパイラの内部エラーによってコンパイルできない
-int swift_impl_putchar(int c);
-int putchar(int ch) {
-    return swift_impl_putchar(ch);
-}

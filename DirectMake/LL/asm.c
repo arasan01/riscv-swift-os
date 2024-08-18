@@ -181,3 +181,119 @@ uint32_t __atomic_fetch_add_4(volatile void *ptr, uint32_t val, int memorder)
     );
     return result;
 }
+
+__attribute__((naked)) void switch_context(
+    uint32_t *prev_sp, uint32_t *next_sp
+) {
+    __asm__ __volatile__(
+        "addi sp, sp, -13 * 4\n"
+        "sw ra,  0  * 4(sp)\n"
+        "sw s0,  1  * 4(sp)\n"
+        "sw s1,  2  * 4(sp)\n"
+        "sw s2,  3  * 4(sp)\n"
+        "sw s3,  4  * 4(sp)\n"
+        "sw s4,  5  * 4(sp)\n"
+        "sw s5,  6  * 4(sp)\n"
+        "sw s6,  7  * 4(sp)\n"
+        "sw s7,  8  * 4(sp)\n"
+        "sw s8,  9  * 4(sp)\n"
+        "sw s9,  10 * 4(sp)\n"
+        "sw s10, 11 * 4(sp)\n"
+        "sw s11, 12 * 4(sp)\n"
+        "sw sp, (a0)\n"
+        "lw sp, (a1)\n"
+        "lw ra,  0  * 4(sp)\n"
+        "lw s0,  1  * 4(sp)\n"
+        "lw s1,  2  * 4(sp)\n"
+        "lw s2,  3  * 4(sp)\n"
+        "lw s3,  4  * 4(sp)\n"
+        "lw s4,  5  * 4(sp)\n"
+        "lw s5,  6  * 4(sp)\n"
+        "lw s6,  7  * 4(sp)\n"
+        "lw s7,  8  * 4(sp)\n"
+        "lw s8,  9  * 4(sp)\n"
+        "lw s9,  10 * 4(sp)\n"
+        "lw s10, 11 * 4(sp)\n"
+        "lw s11, 12 * 4(sp)\n"
+        "addi sp, sp, 13 * 4\n"
+        "ret\n"
+    );
+}
+
+int putchar(int c) {
+    sbi_call(c, 0, 0, 0, 0, 0, 0, 1);
+    return c;
+}
+
+static uint32_t _seed = 0;
+
+void init_seed(uint32_t seed) {
+    uint32_t cycle, time;
+
+    if (seed != 0) {
+        _seed = seed;
+        return;
+    }
+    __asm__ volatile ("rdcycle %0" : "=r" (cycle));
+    __asm__ volatile ("rdtime %0" : "=r" (time));
+
+    _seed = cycle ^ time;
+}
+
+uint32_t lcg_random(void) {
+    __asm__ volatile (
+        "li t0, 1664525\n\t"
+        "li t1, 1013904223\n\t"
+        "mul %0, %0, t0\n\t"
+        "add %0, %0, t1\n\t"
+        : "+r" (_seed)
+        :
+        : "t0", "t1"
+    );
+    return _seed;
+}
+
+uint32_t arc4random(void) {
+    if (_seed == 0) {
+        init_seed(0);
+    }
+    return lcg_random();
+}
+
+void arc4random_buf(void *buf, size_t nbytes) {
+    uint8_t *p = (uint8_t *)buf;
+    size_t i;
+
+    if (_seed == 0) {
+        init_seed(0);
+    }
+
+    for (i = 0; i < nbytes; i++) {
+        if (i % 4 == 0) {
+            uint32_t random = lcg_random();
+            *(uint32_t *)(p + i) = random;
+        }
+    }
+}
+
+uint32_t
+arc4random_uniform(uint32_t upper_bound) {
+    uint32_t r, min;
+
+    if (upper_bound < 2)
+        return 0;
+
+    if (_seed == 0) {
+        init_seed(0);
+    }
+
+    min = -upper_bound % upper_bound;
+
+    for (;;) {
+        r = arc4random();
+        if (r >= min)
+            break;
+    }
+
+    return r % upper_bound;
+}

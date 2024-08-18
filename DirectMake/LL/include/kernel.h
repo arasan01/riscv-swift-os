@@ -65,6 +65,12 @@ struct trap_frame {
     uint32_t sp;
 } __attribute__((packed));
 
+void switch_context(
+    uint32_t *prev_sp, uint32_t *next_sp
+);
+
+void init_seed(uint32_t seed);
+
 void register_kernel_entry();
 void kernel_entry(void);
 
