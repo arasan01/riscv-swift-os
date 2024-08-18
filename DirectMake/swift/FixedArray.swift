@@ -211,6 +211,7 @@
     you may redistribute such product without providing attribution as would
     otherwise be required by Sections 4(a), 4(b) and 4(d) of the License.
 
+*/
 
 // Contains experimental implementations of FixedArray and BufferView
 
@@ -452,4 +453,3 @@ public struct BufferView<Element>: Collection {
     return i.advanced(by: 1)
   }
 }
-*/

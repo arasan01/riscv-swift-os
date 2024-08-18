@@ -4,4 +4,9 @@ extension VolatileMappedRegister {
   init(rawPointer: UnsafeRawPointer) {
     self.init(unsafeBitPattern: UInt(bitPattern: rawPointer))
   }
+
+  static func panic(_ text: String) -> VolatileMappedRegister {
+    PANIC(text)
+    return VolatileMappedRegister(unsafeBitPattern: 0)
+  }
 }
