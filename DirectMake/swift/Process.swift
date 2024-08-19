@@ -115,12 +115,10 @@ func processYield() {
   ProcessManager.shared.yield()
 }
 
+@discardableResult
 func createProcess(pc: UInt32) -> UnsafeMutablePointer<Process> {
   return ProcessManager.shared.newProcess(pc: pc)
 }
-
-nonisolated(unsafe) var procA: UnsafeMutablePointer<Process>? = nil
-nonisolated(unsafe) var procB: UnsafeMutablePointer<Process>? = nil
 
 @_cdecl("procAEntry")
 func procAEntry() {
@@ -146,8 +144,8 @@ func procBEntry() {
 
 func procTest() {
   print("process test")
-  procA = createProcess(pc: UInt32(get_procA()))
-  procB = createProcess(pc: UInt32(get_procB()))
+  createProcess(pc: UInt32(get_procA()))
+  createProcess(pc: UInt32(get_procB()))
   processYield()
   PANIC("switched to idle process");
 }
