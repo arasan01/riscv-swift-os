@@ -1,6 +1,16 @@
 #include "include/kernel.h"
 #include "include/swift_assist.h"
 
+void procAEntry();
+void procBEntry();
+
+uintptr_t get_procA() {
+    return (uintptr_t)procAEntry;
+}
+uintptr_t get_procB() {
+    return (uintptr_t)procBEntry;
+}
+
 char *get_bss_start() {
     return __bss;
 }

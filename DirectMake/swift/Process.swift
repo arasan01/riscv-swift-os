@@ -26,23 +26,29 @@ class ProcessManager: @unchecked Sendable {
   static let shared = ProcessManager()
   private init() {
     procs = UnsafeMutableBufferPointer<Process>.allocate(capacity: PROCS_MAX)
-    procs.initialize(repeating: Process(pid: 0, state: .UNUSED, sp: 0))
+    for i in 0..<PROCS_MAX {
+      procs[i] = Process(pid: 0, state: .UNUSED, sp: 0)
+    }
+    currentProc = nil
+    idleProc = self.newProcess(pc: 0)
+    idleProc!.pointee.pid = -1
+    currentProc = idleProc
   }
 
   private var procs: UnsafeMutableBufferPointer<Process>
+  private var currentProc: UnsafeMutablePointer<Process>?
+  private var idleProc: UnsafeMutablePointer<Process>?
 
-  func newProcess(pc: UInt32) -> VolatileMappedRegister<Process> {
-    let idx = procs.firstIndex { $0.state == .UNUSED }
+  func newProcess(pc: UInt32) -> UnsafeMutablePointer<Process> {
     guard
-      let idx ,
-      idx < PROCS_MAX,
+      let idx = procs.firstIndex(where: { $0.state == .UNUSED }),
       let baseAddr = procs.baseAddress
     else {
       PANIC("no free process slots")
       return .panic("no free process slots")
     }
     let rawPointer = baseAddr.advanced(by: idx)
-    let sp = rawPointer.pointee.stack.baseAddress!.advanced(by: MemoryLayout<UInt8>.size)
+    let sp = rawPointer.pointee.stack.baseAddress!.advanced(by: rawPointer.pointee.stack.count)
     let typeEraseSP = UnsafeMutableRawPointer(sp)
     var resp = typeEraseSP.bindMemory(to: UInt32.self, capacity: 13)
     resp = resp.advanced(by: -1) // s11
@@ -73,51 +79,71 @@ class ProcessManager: @unchecked Sendable {
     resp.pointee = pc
     rawPointer.pointee.pid = idx + 1
     rawPointer.pointee.state = .RUNNABLE
-    let respPtrValue = Int(bitPattern: resp)
-    rawPointer.pointee.sp = UInt32(bitPattern: Int32(exactly: respPtrValue)!)
-    let vaddr = VolatileMappedRegister<Process>(rawPointer: rawPointer)
-    return vaddr
+    let respPtrValue = UInt(bitPattern: resp)
+    rawPointer.pointee.sp = UInt32(respPtrValue)
+    let retPtr = UnsafeMutablePointer<Process>(rawPointer)
+    return retPtr
+  }
+
+  func yield() {
+    var next = idleProc
+    for i in 0..<PROCS_MAX {
+      let idx = (currentProc!.pointee.pid + PROCS_MAX + i) % PROCS_MAX
+      let proc = procs[idx]
+      if proc.state == .RUNNABLE && proc.pid > 0 {
+        next = procs.baseAddress!.advanced(by: idx)
+        break
+      }
+    }
+    // 他の実行中プロセスなしはそのまま戻り
+    if next == currentProc {
+      return
+    }
+    // コンテキストスイッチ
+    let prev = currentProc
+    currentProc = next
+    switch_context(&prev!.pointee.sp, &next!.pointee.sp)
   }
 }
 
-/*
-struct process *create_process(uint32_t pc) {
-    // 空いているプロセス管理構造体を探す
-    struct process *proc = NULL;
-    int i;
-    for (i = 0; i < PROCS_MAX; i++) {
-        if (procs[i].state == PROC_UNUSED) {
-            proc = &procs[i];
-            break;
-        }
-    }
-
-    if (!proc)
-        PANIC("no free process slots");
-
-    // switch_context() で復帰できるように、スタックに呼び出し先保存レジスタを積む
-    uint32_t *sp = (uint32_t *) &proc->stack[sizeof(proc->stack)];
-    *--sp = 0;                      // s11
-    *--sp = 0;                      // s10
-    *--sp = 0;                      // s9
-    *--sp = 0;                      // s8
-    *--sp = 0;                      // s7
-    *--sp = 0;                      // s6
-    *--sp = 0;                      // s5
-    *--sp = 0;                      // s4
-    *--sp = 0;                      // s3
-    *--sp = 0;                      // s2
-    *--sp = 0;                      // s1
-    *--sp = 0;                      // s0
-    *--sp = (uint32_t) pc;          // ra
-
-    // 各フィールドを初期化
-    proc->pid = i + 1;
-    proc->state = PROC_RUNNABLE;
-    proc->sp = (uint32_t) sp;
-    return proc;
+func processYield() {
+  ProcessManager.shared.yield()
 }
-*/
-func createProcess(pc: UInt32) -> VolatileMappedRegister<Process> {
+
+func createProcess(pc: UInt32) -> UnsafeMutablePointer<Process> {
   return ProcessManager.shared.newProcess(pc: pc)
+}
+
+nonisolated(unsafe) var procA: UnsafeMutablePointer<Process>? = nil
+nonisolated(unsafe) var procB: UnsafeMutablePointer<Process>? = nil
+
+@_cdecl("procAEntry")
+func procAEntry() {
+  while true {
+    swiftPutchar(65)
+    processYield()
+    for _ in 0..<1000000 {
+      nop()
+    }
+  }
+}
+
+@_cdecl("procBEntry")
+func procBEntry() {
+  while true {
+    swiftPutchar(66)
+    processYield()
+    for _ in 0..<1000000 {
+      nop()
+    }
+  }
+}
+
+func procTest() {
+  print("procTest")
+  procA = createProcess(pc: UInt32(get_procA()))
+  procB = createProcess(pc: UInt32(get_procB()))
+  print("created processes")
+  processYield()
+  PANIC("switched to idle process");
 }

@@ -6,7 +6,7 @@ func handle_trap(_ f: UnsafeMutablePointer<trap_frame>) {
   let scause = get_scause()
   let stval = get_stval()
   let user_pc = get_sepc()
-  print(f.pointee.sp.hexString)
+  print("sp: \(f.pointee.sp.hexString)")
   PANIC("unexpected trap scause=\(scause), stval=\(stval), sepc=\(user_pc.hexString)")
 }
 
@@ -21,5 +21,8 @@ func kernel_main_swift() {
   register_kernel_entry()
   printUnicode()
   checkRandom()
+
+  procTest()
+
   PANIC("SYSTEM HALTED")
 }

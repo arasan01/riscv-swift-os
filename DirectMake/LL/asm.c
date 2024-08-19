@@ -24,6 +24,10 @@ void wfi() {
     __asm__ __volatile__("wfi");
 }
 
+void nop() {
+    __asm__ __volatile__("nop");
+}
+
 void unimp() {
     __asm__ __volatile__("unimp");
 }

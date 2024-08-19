@@ -2,6 +2,8 @@
 
 #include <stddef.h>
 
+uintptr_t get_procA();
+uintptr_t get_procB();
 char *get_bss_start();
 char *get_bss_end();
 char *get_stack_top();

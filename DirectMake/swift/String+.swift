@@ -14,3 +14,9 @@ extension UInt32 {
     return toHexString(self)
   }
 }
+
+extension UInt {
+  var hexString: String {
+    return toHexString(UInt32(self))
+  }
+}

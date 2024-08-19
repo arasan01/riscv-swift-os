@@ -20,6 +20,7 @@ extern char __free_ram_end[];
 
 void unimp();
 void wfi();
+void nop();
 
 struct sbiret {
     long error;
