@@ -21,8 +21,6 @@ func kernel_main_swift() {
   register_kernel_entry()
   printUnicode()
   checkRandom()
-
   procTest()
-
   PANIC("SYSTEM HALTED")
 }

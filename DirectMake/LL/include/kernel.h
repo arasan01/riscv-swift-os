@@ -84,6 +84,8 @@ void set_stval(uint32_t value);
 uint32_t get_sepc();
 void set_sepc(uint32_t value);
 
+void set_sscratch(uint32_t value);
+
 #define READ_CSR(reg)                                                          \
     ({                                                                         \
         unsigned long __tmp;                                                   \

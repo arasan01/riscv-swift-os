@@ -99,7 +99,12 @@ class ProcessManager: @unchecked Sendable {
     if next == currentProc {
       return
     }
-    // コンテキストスイッチ
+
+    set_sscratch(UInt32(UInt(
+      bitPattern: next!.pointee.stack.baseAddress!.advanced(
+        by: next!.pointee.stack.count
+      )
+    )));
     let prev = currentProc
     currentProc = next
     switch_context(&prev!.pointee.sp, &next!.pointee.sp)
@@ -140,10 +145,9 @@ func procBEntry() {
 }
 
 func procTest() {
-  print("procTest")
+  print("process test")
   procA = createProcess(pc: UInt32(get_procA()))
   procB = createProcess(pc: UInt32(get_procB()))
-  print("created processes")
   processYield()
   PANIC("switched to idle process");
 }
