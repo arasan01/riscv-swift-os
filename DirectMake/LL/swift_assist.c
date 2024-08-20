@@ -17,6 +17,9 @@ char *get_bss_start() {
 char *get_bss_end() {
     return __bss_end;
 }
+char *get_kernel_base() {
+    return __kernel_base;
+}
 char *get_stack_top() {
     return __stack_top;
 }
@@ -31,6 +34,9 @@ size_t get_bss_ptr_value() {
 }
 size_t get_bss_end_ptr_value() {
     return (size_t)__bss_end;
+}
+size_t get_kernel_base_ptr_value() {
+    return (size_t)__kernel_base;
 }
 size_t get_stack_top_ptr_value() {
     return (size_t)__stack_top;

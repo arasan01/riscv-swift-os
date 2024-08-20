@@ -101,6 +101,19 @@ void free(void *ptr) {
     ptr = NULL;
 }
 
+void memset(void *buf, int c, size_t n);
+paddr_t alloc_pages(uint32_t n) {
+    static paddr_t next_paddr = (paddr_t) __free_c_ram;
+    paddr_t paddr = next_paddr;
+    next_paddr += n * PAGE_SIZE;
+
+    if (next_paddr > (paddr_t) __free_c_ram_end)
+        CPANIC("out of memory");
+
+    memset((void *) paddr, 0, n * PAGE_SIZE);
+    return paddr;
+}
+
 // 64ビット整数の算術左シフト演算を行う
 int64_t __ashldi3(int64_t a, int32_t b) {
     uint32_t low = (uint32_t)a;

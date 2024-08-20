@@ -6,6 +6,8 @@
 #include "swift_assist.h"
 #include "will_remove.h"
 
+#define PAGE_SIZE (uint32_t)4096
+
 #define align_up(value, align)   __builtin_align_up(value, align)
 #define is_aligned(value, align) __builtin_is_aligned(value, align)
 
@@ -14,9 +16,14 @@ typedef uintptr_t vaddr_t;
 
 extern char __bss[];
 extern char __bss_end[];
+extern char __kernel_base[];
 extern char __stack_top[];
-extern char __free_ram[];
+extern char __free_c_ram[]; // for page allocator
+extern char __free_c_ram_end[];
+extern char __free_ram[]; // for swift runtime memalign
 extern char __free_ram_end[];
+
+paddr_t alloc_pages(uint32_t n);
 
 void unimp();
 void wfi();
@@ -84,6 +91,7 @@ void set_stval(uint32_t value);
 uint32_t get_sepc();
 void set_sepc(uint32_t value);
 
+void set_satp(uint32_t value);
 void set_sscratch(uint32_t value);
 
 #define READ_CSR(reg)                                                          \

@@ -161,6 +161,16 @@ void set_sepc(uint32_t value) {
     __asm__ __volatile__("csrw sepc, %0" ::"r"(value));
 }
 
+void set_satp(uint32_t value) {
+    __asm__ __volatile__(
+        "sfence.vma\n"
+        "csrw satp, %[satp]\n"
+        "sfence.vma\n"
+        :
+        : [satp] "r" (value)
+    );
+}
+
 void set_sscratch(uint32_t value) {
     __asm__ __volatile__(
         "csrw sscratch, %[sscratch]\n"

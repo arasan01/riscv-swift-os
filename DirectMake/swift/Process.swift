@@ -10,6 +10,7 @@ struct Process {
   var pid: Int
   var state: ProcessState
   var sp: UInt32
+  var pageTable: UnsafeMutablePointer<UInt32>!
   var stack: UnsafeMutableBufferPointer<UInt8>
 
   init(pid: Int, state: ProcessState, sp: UInt32) {
@@ -77,8 +78,18 @@ class ProcessManager: @unchecked Sendable {
     resp.pointee = 0
     resp = resp.advanced(by: -1) // ra
     resp.pointee = pc
+
+    let pageTablePtr = alloc_pages(1)
+    let pageTable = UnsafeMutablePointer<UInt32>(bitPattern: pageTablePtr)!
+    for addr in get_kernel_base_ptr_value()..<get_free_ram_end_ptr_value() {
+      let vaddr = UInt32(addr)
+      let paddr = UInt32(addr)
+      mapPage(pageTable, vaddr: vaddr, paddr: paddr, flags: Page.PAGE_R | Page.PAGE_W | Page.PAGE_X)
+    }
+
     rawPointer.pointee.pid = idx + 1
     rawPointer.pointee.state = .RUNNABLE
+    rawPointer.pointee.pageTable = pageTable
     let respPtrValue = UInt(bitPattern: resp)
     rawPointer.pointee.sp = UInt32(respPtrValue)
     let retPtr = UnsafeMutablePointer<Process>(rawPointer)
@@ -100,6 +111,9 @@ class ProcessManager: @unchecked Sendable {
       return
     }
 
+    set_satp(Page.SATP_SV32 | UInt32(UInt(
+      bitPattern: next!.pointee.pageTable
+    )) / PAGE_SIZE)
     set_sscratch(UInt32(UInt(
       bitPattern: next!.pointee.stack.baseAddress!.advanced(
         by: next!.pointee.stack.count
