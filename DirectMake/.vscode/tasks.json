@@ -1,0 +1,46 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+        "label": "build - debug",
+        "type": "shell",
+        "command": "make --always-make -C ${workspaceFolder} -j8 debug",
+        "group": {
+            "kind": "build",
+            "isDefault": true
+        }
+    },
+    {
+      "label": "build - release",
+      "type": "shell",
+      "command": "make --always-make -C ${workspaceFolder} -j8 release",
+      "group": {
+          "kind": "build",
+          "isDefault": true
+      }
+    },
+    {
+      "type": "shell",
+      "label": "start-qemu-debug-server",
+      "command": "make dev",
+      "isBackground": true,
+      "problemMatcher": [
+          {
+              "pattern": [
+                  {
+                      "regexp": ".",
+                      "file": 1,
+                      "location": 2,
+                      "message": 3
+                  }
+              ],
+              "background": {
+                  "activeOnStart": true,
+                  "beginsPattern": ".",
+                  "endsPattern": "."
+              }
+          }
+      ]
+    }
+  ]
+}

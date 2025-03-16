@@ -2,5 +2,4 @@ HowToSwiftCompiler/a
 **/*.o
 **/_swiftcode.S
 ext/
-.vscode/
 DirectMake/.build
