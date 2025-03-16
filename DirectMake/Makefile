@@ -1,5 +1,5 @@
 # Toolchain
-XCTOOLCHAIN=/Library/Developer/Toolchains/swift-DEVELOPMENT-SNAPSHOT-2024-09-05-a.xctoolchain
+XCTOOLCHAIN=/Library/Developer/Toolchains/swift-DEVELOPMENT-SNAPSHOT-2025-03-10-a.xctoolchain
 XCTOOLCHAIN_ID:=$(shell plutil -extract CFBundleIdentifier raw $(XCTOOLCHAIN)/Info.plist)
 
 # Compiler - Swift
