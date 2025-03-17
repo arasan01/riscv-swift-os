@@ -4,7 +4,7 @@ XCTOOLCHAIN_ID:=$(shell plutil -extract CFBundleIdentifier raw $(XCTOOLCHAIN)/In
 
 # Compiler - Swift
 SWIFTC=xcrun --toolchain $(XCTOOLCHAIN_ID) swiftc
-SWIFT_FLAGS_BASE=-parse-as-library -I LL -swift-version 6
+SWIFT_FLAGS_BASE=-parse-as-library -I LowLevel -swift-version 6
 SWIFT_FLAGS_EMBEDDED=-enable-experimental-feature Embedded -enable-experimental-feature Extern -enable-experimental-feature FixedArrays -runtime-compatibility-version none -wmo -Xfrontend -function-sections -Xfrontend -disable-stack-protector -Xfrontend -disable-objc-interop
 SWIFT_FLAGS_RISCV=-target riscv32-none-none-eabi -Xcc -march=rv32gc -Xcc -mabi=ilp32
 
@@ -24,10 +24,10 @@ LIBSWIFT_UNICODE_TABLE=$(XCTOOLCHAIN)/usr/lib/swift/embedded/riscv32-none-none-e
 QEMU=qemu-system-riscv32
 
 # Related Files
-SWIFT_SOURCES=$(wildcard swift/*.swift)
-CC_SOURCES=$(wildcard ll/*.c)
+SWIFT_SOURCES=$(wildcard Swift/*.swift)
+CC_SOURCES=$(wildcard LowLevel/*.c)
 BUILD_DIR=.build
-CC_OBJS=$(patsubst ll/%.c,$(BUILD_DIR)/%.o,$(CC_SOURCES))
+CC_OBJS=$(patsubst LowLevel/%.c,$(BUILD_DIR)/%.o,$(CC_SOURCES))
 SWIFT_OBJECT=_swiftcode.o
 OUTPUT=$(BUILD_DIR)/kernel.elf
 
@@ -46,7 +46,7 @@ release: $(OUTPUT) $(OBJECT)
 $(BUILD_DIR)/$(SWIFT_OBJECT): $(SWIFT_SOURCES)
 	$(SWIFTC) $(SWIFT_FLAGS_BASE) $(SWIFT_FLAGS_EMBEDDED) $(SWIFT_FLAGS_RISCV) -c $^ -o $@
 
-$(BUILD_DIR)/%.o: ll/%.c
+$(BUILD_DIR)/%.o: LowLevel/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(OUTPUT): $(BUILD_DIR)/$(SWIFT_OBJECT) $(CC_OBJS)
