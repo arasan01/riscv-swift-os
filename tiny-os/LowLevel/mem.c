@@ -1,5 +1,5 @@
 #include "include/kernel.h"
-#include "include/swift_assist.h"
+#include "include/mem.h"
 
 void procAEntry();
 void procBEntry();

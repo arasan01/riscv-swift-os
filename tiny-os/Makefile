@@ -60,6 +60,9 @@ dev:
 
 run:
 	$(QEMU) -machine virt -bios default -nographic -serial mon:stdio --no-reboot -kernel $(OUTPUT) -D $(BUILD_DIR)/logfile.log -d in_asm
+	
+bootstrap:
+	brew install qemu llvm
 
 check-undef-symbol: $(OUTPUT)
 	nm -u $(OUTPUT)
@@ -67,4 +70,4 @@ check-undef-symbol: $(OUTPUT)
 check-extern-symbol: $(OUTPUT)
 	nm -g $(OUTPUT)
 
-.PHONY: all clean check-undef-symbol check-extern-symbol run dev debug release
+.PHONY: all clean check-undef-symbol check-extern-symbol run dev debug release bootstrap

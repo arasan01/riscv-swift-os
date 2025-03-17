@@ -40,7 +40,7 @@
 /* Begin PBXLegacyTarget section */
 		6FA82E6F2D875B03003B0801 /* riscv-embedded-swift */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = debug;
+			buildArgumentsString = "clean debug";
 			buildConfigurationList = 6FA82E702D875B03003B0801 /* Build configuration list for PBXLegacyTarget "riscv-embedded-swift" */;
 			buildPhases = (
 			);
