@@ -1,5 +1,5 @@
 #include "include/kernel.h"
-#include "include/will_remove.h"
+#include "include/libc.h"
 
 int putchar(int c);
 void myprintf(const char *fmt, ...) {

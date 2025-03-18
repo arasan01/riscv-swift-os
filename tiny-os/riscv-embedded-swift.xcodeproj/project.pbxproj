@@ -7,18 +7,19 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		6FA82E6E2D875ADD003B0801 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		6FA82EDF2D88AA16003B0801 /* kernel.ld */ = {isa = PBXFileReference; lastKnownFileType = text; path = kernel.ld; sourceTree = "<group>"; };
+		6FA82EE92D88AA16003B0801 /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		6FA82E692D875ADD003B0801 /* DirectMake */ = {
+		6FA82EE82D88AA16003B0801 /* LowLevel */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = DirectMake;
+			path = LowLevel;
 			sourceTree = "<group>";
 		};
-		6FA82E6D2D875ADD003B0801 /* docs */ = {
+		6FA82EF12D88AA16003B0801 /* Swift */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = docs;
+			path = Swift;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -27,9 +28,10 @@
 		6FA82E2A2D875A97003B0801 = {
 			isa = PBXGroup;
 			children = (
-				6FA82E692D875ADD003B0801 /* DirectMake */,
-				6FA82E6D2D875ADD003B0801 /* docs */,
-				6FA82E6E2D875ADD003B0801 /* README.md */,
+				6FA82EDF2D88AA16003B0801 /* kernel.ld */,
+				6FA82EE82D88AA16003B0801 /* LowLevel */,
+				6FA82EE92D88AA16003B0801 /* Makefile */,
+				6FA82EF12D88AA16003B0801 /* Swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -38,13 +40,17 @@
 /* Begin PBXLegacyTarget section */
 		6FA82E6F2D875B03003B0801 /* riscv-embedded-swift */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION)";
+			buildArgumentsString = "clean debug";
 			buildConfigurationList = 6FA82E702D875B03003B0801 /* Build configuration list for PBXLegacyTarget "riscv-embedded-swift" */;
 			buildPhases = (
 			);
 			buildToolPath = /usr/bin/make;
-			buildWorkingDirectory = "/Users/arasan01/src/github.com/arasan01/riscv-swift-os/DirectMake";
+			buildWorkingDirectory = "/Users/arasan01/src/github.com/arasan01/riscv-swift-os/tiny-os";
 			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				6FA82EE82D88AA16003B0801 /* LowLevel */,
+				6FA82EF12D88AA16003B0801 /* Swift */,
 			);
 			name = "riscv-embedded-swift";
 			packageProductDependencies = (

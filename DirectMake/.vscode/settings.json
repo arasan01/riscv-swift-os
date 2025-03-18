@@ -1,4 +1,0 @@
-{
-  "lldb.library": "/Library/Developer/Toolchains/swift-DEVELOPMENT-SNAPSHOT-2024-08-01-a.xctoolchain/usr/bin/lldb",
-  "lldb.launch.expressions": "native",
-}

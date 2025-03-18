@@ -1,9 +1,7 @@
 ENTRY(boot)
 
 SECTIONS {
-  /DISCARD/ : ALIGN(4) {
-      *(.swift_modhash);
-  }
+  /DISCARD/ : { *(.swift_modhash*) }
 
   . = 0x80200000;
   __kernel_base = .;

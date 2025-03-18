@@ -3,8 +3,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
-#include "swift_assist.h"
-#include "will_remove.h"
+#include "mem.h"
+#include "libc.h"
 
 #define PAGE_SIZE (uint32_t)4096
 
