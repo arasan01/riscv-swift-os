@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 
 uintptr_t get_procA();
 uintptr_t get_procB();
